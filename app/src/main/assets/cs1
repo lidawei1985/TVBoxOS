@@ -1,0 +1,10 @@
+{
+  "name": "MyTVBox",
+  "homeUrl": "https://raw.githubusercontent.com/你的用户名/仓库/main/推荐页.json",
+  "userAgent": "Mozilla/5.0",
+  "showAllChannel": true,
+  "searchable": true,
+  "quickSearch": true,
+  "spider": "https://raw.githubusercontent.com/你的用户名/仓库/main/爬虫.jar",
+  "liveUrl": "https://raw.githubusercontent.com/你的用户名/仓库/main/直播源.txt"
+}
