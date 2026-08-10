@@ -38,6 +38,7 @@ public class App extends MultiDexApplication {
     @Override
     public void onCreate() {
         super.onCreate();
+        installCrashGuard();
         instance = this;
         initParams();
         // OKGo
@@ -71,6 +72,19 @@ public class App extends MultiDexApplication {
 
     public static App getInstance() {
         return instance;
+    }
+
+    private void installCrashGuard() {
+        final Thread.UncaughtExceptionHandler def = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread thread, Throwable throwable) {
+                LOG.e("CrashGuard@" + thread.getName() + ": " + (throwable == null ? "null" : throwable.toString()));
+                try { if (def != null) def.uncaughtException(thread, throwable); } catch (Throwable ignored) {}
+                android.os.Process.killProcess(android.os.Process.myPid());
+                System.exit(1);
+            }
+        });
     }
 
     @Override
