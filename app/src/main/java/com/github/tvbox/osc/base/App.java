@@ -23,6 +23,11 @@ import com.p2p.P2PClass;
 import me.jessyan.autosize.AutoSizeConfig;
 import me.jessyan.autosize.unit.Subunits;
 
+import android.content.SharedPreferences;
+import com.github.tvbox.osc.update.UpdateConstants;
+import com.github.tvbox.osc.update.UpdateInfo;
+import com.github.tvbox.osc.update.UpdateManager;
+
 /**
  * @author pj567
  * @date :2020/12/17
@@ -39,6 +44,7 @@ public class App extends MultiDexApplication {
     public void onCreate() {
         super.onCreate();
         installCrashGuard();
+        checkAppUpdate();
         instance = this;
         initParams();
         // OKGo
@@ -85,6 +91,34 @@ public class App extends MultiDexApplication {
                 System.exit(1);
             }
         });
+    }
+
+    /** 规格1：启动后后台静默检查应用更新，结果写入 SP 供首页提示 */
+    private void checkAppUpdate() {
+        int current = 0;
+        try {
+            android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+            current = pi.versionCode;
+        } catch (Exception ignored) {}
+        final int cur = current;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                UpdateManager.checkUpdate(getApplicationContext(), cur, new UpdateManager.CheckCallback() {
+                    @Override
+                    public void onResult(UpdateInfo info) {
+                        if (info == null) return;
+                        SharedPreferences sp = getSharedPreferences(UpdateConstants.SP_NAME, MODE_PRIVATE);
+                        sp.edit()
+                                .putBoolean("has_update", true)
+                                .putString("new_version", info.versionName)
+                                .putString("changelog", info.changelog)
+                                .putBoolean("force", info.force)
+                                .apply();
+                    }
+                });
+            }
+        }).start();
     }
 
     @Override
