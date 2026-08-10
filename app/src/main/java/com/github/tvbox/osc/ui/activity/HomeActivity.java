@@ -41,6 +41,9 @@ import com.github.tvbox.osc.ui.adapter.SelectDialogAdapter;
 import com.github.tvbox.osc.ui.adapter.SortAdapter;
 import com.github.tvbox.osc.ui.dialog.SelectDialog;
 import com.github.tvbox.osc.ui.dialog.TipDialog;
+import com.github.tvbox.osc.update.UpdateConstants;
+import com.github.tvbox.osc.update.UpdateInfo;
+import com.github.tvbox.osc.update.UpdateManager;
 import com.github.tvbox.osc.ui.fragment.GridFragment;
 import com.github.tvbox.osc.ui.fragment.UserFragment;
 import com.github.tvbox.osc.ui.tv.widget.DefaultTransformer;
@@ -108,6 +111,7 @@ public class HomeActivity extends BaseActivity {
     }
 
     boolean useCacheConfig = false;
+    private boolean updatePrompted = false;
 
     @Override
     protected void init() {
@@ -504,8 +508,56 @@ public class HomeActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         mHandler.post(mRunnable);
+        maybeCheckUpdate();
     }
 
+    /** 规格1：进入首页检查更新并提示（仅提示一次；同时补偿处理后台下载完成的安装） */
+    private void maybeCheckUpdate() {
+        UpdateManager.resumePending(this);
+        if (updatePrompted) return;
+        updatePrompted = true;
+        final int cur = currentVersionCode();
+        UpdateManager.checkUpdate(getApplicationContext(), cur, new UpdateManager.CheckCallback() {
+            @Override
+            public void onResult(UpdateInfo info) {
+                if (info != null) showUpdateDialog(info);
+            }
+        });
+    }
+
+    private void showUpdateDialog(final UpdateInfo info) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("发现新版本 v").append(info.versionName).append("\n\n");
+        if (info.changelog != null && !info.changelog.isEmpty()) {
+            sb.append(info.changelog).append("\n\n");
+        }
+        sb.append("是否立即下载更新？");
+        TipDialog dialog = new TipDialog(HomeActivity.this, sb.toString(), "立即更新", "稍后", new TipDialog.OnListener() {
+            @Override
+            public void left() {
+                UpdateManager.startUpdate(HomeActivity.this, info);
+                Toast.makeText(HomeActivity.this, "已开始后台下载，请留意通知栏", Toast.LENGTH_LONG).show();
+            }
+            @Override
+            public void right() {
+                if (info.force) finish();
+            }
+            @Override
+            public void cancel() {
+                if (info.force) finish();
+            }
+        });
+        dialog.show();
+    }
+
+    private int currentVersionCode() {
+        try {
+            android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+            return pi.versionCode;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
 
     @Override
     protected void onPause() {
