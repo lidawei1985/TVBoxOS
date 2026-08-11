@@ -123,6 +123,29 @@
         android:paddingBottom="@dimen/vs_20">
 
         <TextView
+            android:id="@+id/tvStarHint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/vs_10"
+            android:gravity="center"
+            android:text="猜你想找的明星"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/ts_20"
+            android:visibility="gone" />
+
+        <com.owen.tvrecyclerview.widget.TvRecyclerView
+            android:id="@+id/mGridViewStar"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_marginBottom="@dimen/vs_10"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:visibility="gone"
+            app:tv_horizontalSpacingWithMargins="@dimen/vs_5"
+            app:tv_selectedItemIsCentered="true"
+            app:tv_verticalSpacingWithMargins="@dimen/vs_5" />
+
+        <TextView
             android:id="@+id/wordSwitch"
             android:layout_width="@dimen/vs_200"
             android:background="@drawable/shape_user_focus"
