@@ -28,6 +28,8 @@ import com.github.tvbox.osc.bean.SourceBean;
 import com.github.tvbox.osc.event.RefreshEvent;
 import com.github.tvbox.osc.event.ServerEvent;
 import com.github.tvbox.osc.ui.adapter.PinyinAdapter;
+import com.github.tvbox.osc.search.CelebritySuggestion;
+import com.github.tvbox.osc.ui.adapter.CelebrityAdapter;
 import com.github.tvbox.osc.ui.adapter.SearchAdapter;
 import com.github.tvbox.osc.ui.dialog.RemoteDialog;
 import com.github.tvbox.osc.ui.dialog.SearchCheckboxDialog;
@@ -77,6 +79,9 @@ public class SearchActivity extends BaseActivity {
     private SearchKeyboard keyboard;
     private SearchAdapter searchAdapter;
     private PinyinAdapter wordAdapter;
+    private CelebrityAdapter starAdapter;
+    private TvRecyclerView mGridViewStar;
+    private android.widget.TextView tvStarHint;
     private String searchTitle = "";
     private TextView tvSearchCheckboxBtn;
 
@@ -164,6 +169,18 @@ public class SearchActivity extends BaseActivity {
         mGridViewWord.setLayoutManager(new V7LinearLayoutManager(this.mContext, 1, false));
         wordAdapter = new PinyinAdapter();
         mGridViewWord.setAdapter(wordAdapter);
+        mGridViewStar = findViewById(R.id.mGridViewStar);
+        tvStarHint = findViewById(R.id.tvStarHint);
+        starAdapter = new CelebrityAdapter();
+        mGridViewStar.setAdapter(starAdapter);
+        mGridViewStar.setLayoutManager(new V7LinearLayoutManager(this.mContext, 1, false));
+        starAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
+                com.github.tvbox.osc.search.Celebrity c = starAdapter.getItem(position);
+                if (c != null && c.getName() != null) search(c.getName());
+            }
+        });
         wordsSwitch = findViewById(R.id.wordSwitch);
         wordAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
             @Override
@@ -361,6 +378,7 @@ public class SearchActivity extends BaseActivity {
      */
     private void loadRec(String key) {
 //        OkGo.<String>get("https://s.video.qq.com/smartbox")
+        updateStarSuggestions(key);
 //                .params("plat", 2)
 //                .params("ver", 0)
 //                .params("num", 20)
@@ -415,6 +433,20 @@ public class SearchActivity extends BaseActivity {
                         return response.body().string();
                     }
                 });
+    }
+
+    /** 规格3：根据输入即时联想明星（拼音首字母/全拼/汉字），同步刷新海报轮播 */
+    private void updateStarSuggestions(String key) {
+        if (mGridViewStar == null) return;
+        ArrayList<com.github.tvbox.osc.search.Celebrity> stars = CelebritySuggestion.match(mContext, key);
+        if (stars == null || stars.isEmpty()) {
+            mGridViewStar.setVisibility(android.view.View.GONE);
+            if (tvStarHint != null) tvStarHint.setVisibility(android.view.View.GONE);
+        } else {
+            starAdapter.setNewData(stars);
+            mGridViewStar.setVisibility(android.view.View.VISIBLE);
+            if (tvStarHint != null) tvStarHint.setVisibility(android.view.View.VISIBLE);
+        }
     }
 
     private static ArrayList<String> hots;
