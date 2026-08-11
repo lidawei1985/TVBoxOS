@@ -28,7 +28,7 @@ public class CelebrityAdapter extends BaseQuickAdapter<Celebrity, BaseViewHolder
         String poster = item.getPoster();
         if (poster != null && !poster.isEmpty()) {
             try {
-                Picasso.with(helper.itemView.getContext()).load(poster).into(iv);
+                Picasso.get().load(poster).into(iv);
             } catch (Throwable t) {
                 iv.setImageDrawable(null);
             }
